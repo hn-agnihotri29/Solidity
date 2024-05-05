@@ -28,3 +28,6 @@ contract NestedMappings {
     }
 }
 ```
+## Enums
+The word Enum stands for Enumerable. They are user defined types that contain human readable names for a set of constants, called members. They are commonly used to restrict a variable to only have one of a few predefined values. Since they are just an abstraction for human readable constants, in actuality, they are internally represented as uints.
+
