@@ -28,11 +28,11 @@ contract NestedMappings {
     }
 }
 ```
-<br>
+***
 ## Enums
 The word Enum stands for Enumerable. They are user defined types that contain human readable names for a set of constants, called members. They are commonly used to restrict a variable to only have one of a few predefined values. Since they are just an abstraction for human readable constants, in actuality, they are internally represented as units.
 
-<br>
+***
 ## View and Pure Functions
 You might have noticed that some of the functions we have been writing specify one of either a view or pure keyword in the function header. These are special keywords which indicate specific behavior for the function.
 
@@ -42,11 +42,11 @@ Getter functions (those which return values) can be declared either view or pure
 
 * Pure: Functions which do not change any state values and also do not read any state values
   
-<br>
+***
 ## Modifiers
 Modifiers are code that can be run before and/or after a function call. They are commonly used for restricting access to certain functions, validating input parameters, protecting against certain types of attacks, etc.
 
-<br>
+***
 ## Events
 Events allow contracts to perform logging on the Ethereum blockchain. Logs for a given contract can be parsed later to perform updates on the frontend interface, for example. They are commonly used to allow frontend interfaces to listen for specific events and update the user interface, or used as a cheap form of storage.
 
