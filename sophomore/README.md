@@ -81,3 +81,136 @@ contract X {
     }
 }
 ```
+## Contract Inheritance
+Inheritance is the procedure by which one contract can inherit the attributes and methods of another contract. Solidity supports multiple inheritance. Contracts can inherit other contract by using the is keyword.
+
+A parent contract which has a function that can be overridden by a child contract must be declared as a virtual function.
+
+A child contract that is going to override a parent function must use the override keyword.
+
+The order of inheritance matters if parent contracts share methods or attributes by the same name.
+
+## ETH Transfers
+There are three ways to transfer ETH from a contract to some other address.  Here will go over all of them analysing their strengths and weakness and conclude on the best of the 3.
+
+1 **Using the _send_ function**
+
+The send function sends a specified amount of Ether to an address. It is a low-level function that only provides a stipend of 2300 gas for execution. This amount of gas is only enough to emit an event. If the execution requires more gas, it will fail. The send function does not throw an exception when it fails, instead, it returns **false**. This means you should always check the result of send and handle the failure case manually
+
+```
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
+
+contract SendEther {
+    function sendEth(address payable _to) public payable {
+        // Just forward the ETH received in this payable function
+        // to the given address
+        uint amountToSend = msg.value;
+  
+        bool sent = _to.send(amountToSend);
+        require(sent == true, "Failed to send ETH");
+    }
+}
+```
+
+2. **Using the _call_ function**
+
+The call function is a low-level function that transfers Ether and also forwards all remaining gas. This means call can be used to send Ether and execute more complex operations that require more than 2300 gas. However, like send, call does not automatically revert the transaction if the transfer fails. Instead, it returns false. So you should always check the result and handle the failure case manually. Also, because call forwards all remaining gas, it can potentially enable re-entrancy attacks if not used carefully
+
+```
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
+
+contract SendEther {
+    function sendEth(address payable _to) public payable {
+        // Just forward the ETH received in this payable function
+        // to the given address
+        uint amountToSend = msg.value;
+        // call returns a bool value specifying success or failure
+        (bool success, bytes memory data) = _to.call{value: msg.value}("");
+        require(success == true, "Failed to send ETH");
+    }
+}
+```
+3. **Using the _transfer_ function**
+
+The transfer function also sends a specified amount of Ether to an address. Unlike send or call, transfer automatically throws an exception and reverts the transaction if the transfer fails. This makes transfer safer and easier to use because you do not need to manually check the result or handle the failure case. However, like send, transfer also only provides a stipend of 2300 gas for execution
+
+```
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
+
+contract SendEther {
+    function sendEth(address payable _to) public payable {
+        // Just forward the ETH received in this payable function
+        // to the given address
+        uint amountToSend = msg.value;
+        
+        // Use the transfer method to send the ETH.
+        _to.transfer(msg.value);
+    }
+}
+```
+By using the .transfer method, we can make the code simpler and more straightforward. The .transfer method is also considered safer because it helps to avoid potential reentrancy attacks.
+
+**NOTE:** When using .transfer, ensure you know that it will only forwards 2300 gas, thereby preventing reentrancy attacks. This might not be sufficient gas if the receiver contract needs to perform certain operations.
+
+## Receiving ETH
+
+If you are receiving ETH in an Externally Owned Account (EOA) i.e. an account controlled by a private key (like MetaMask) - you do not need to do anything special as all such accounts can automatically accept all ETH transfers.
+
+However, if you are writing a contract that you want to be able to receive ETH transfers directly, you must have at least one of the functions below:
+
+* receive() external payable
+
+* fallback() external payable
+
+receive() is called if msg.data is an empty value, and fallback() is used otherwise.
+
+## Calling Other Contracts
+
+Contracts can call other contracts by just calling functions on an instance of the other contract like A.foo(x, y, z). To do so, you must have an interface for A which tells your contract which functions exist. Interfaces in Solidity behave like header files, and serve similar purposes to the ABI we have been using when calling contracts from the frontend. This allows a contract to know how to encode and decode function arguments and return values for calling external contracts.
+
+**NOTE:** Interfaces you use do not need to be extensive. i.e. they do not need to necessarily contain all the functions that exist in the external contract - only those which you might be calling at some point.
+Assume there is an external ERC20 contract, and we are interested in calling the balanceOf function to check the balance of a given address from our contract.
+
+## Importing Contracts
+
+To maintain code readability, you can split your Solidity code over multiple files. Assume we have a folder structure that looks like this:
+```
+├── Import.sol
+└── Foo.sol
+```
+where Foo.sol is
+```
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
+
+contract Foo {
+    string public name = "Foo";
+}
+```
+
+We can import Foo and use it in Import.sol as such
+```
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
+
+// import Foo.sol from current directory
+import "./Foo.sol";
+
+contract Import {
+    // Initialize Foo.sol
+    Foo public foo = new Foo();
+
+    // Test Foo.sol by getting it's name.
+    function getFooName() public view returns (string memory) {
+        return foo.name();
+    }
+}
+```
+
+## Libraries
+Libraries are similar to contracts in Solidity, with a few limitations. Libraries cannot contain any state variables, and cannot transfer ETH. Additionally, libraries are only deployed once to the network, which means if you are using a library published by someone else, you do not need to pay gas for it when you deploy your code to the network as Ethereum will understand that that library was already deployed in the past by someone else.
+
+Typically, libraries are used to add helper functions to your contracts. An extremely commonly used library in Solidity world is SafeMath - which ensures that mathematical operations do not cause an integer underflow or overflow.
